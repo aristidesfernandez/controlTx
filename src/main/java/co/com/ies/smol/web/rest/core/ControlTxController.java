@@ -1,6 +1,7 @@
 package co.com.ies.smol.web.rest.core;
 
 import co.com.ies.smol.domain.core.error.ControlTxException;
+import co.com.ies.smol.domain.enumeration.StatusInterfaceBoard;
 import co.com.ies.smol.service.core.ControlTxService;
 import co.com.ies.smol.service.dto.InterfaceBoardDTO;
 import co.com.ies.smol.service.dto.core.AssignBoardDTO;
@@ -18,8 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
@@ -79,5 +78,15 @@ public class ControlTxController {
         log.debug("REST request getInterfaceBoardByBrand brandName : {}", brandName);
 
         return ResponseEntity.ok(controlTxService.getCountInterfaceBoardByBrand(brandName));
+    }
+
+    @PostMapping("/statuschange/board/{mac}/{state}")
+    public ResponseEntity<String> statusChangeBoard(@PathVariable String mac, @PathVariable StatusInterfaceBoard state)
+        throws ControlTxException {
+        log.debug("REST request to save statusChangeBoard mac : {} state {} ", mac, state);
+
+        controlTxService.statusChangeBoard(mac, state);
+
+        return ResponseEntity.ok("ok process assignInterfaceBoard succesfully!!");
     }
 }

@@ -6,6 +6,10 @@ public class ControlTxException extends Exception {
     public static final String BOARD_IS_NOT_IN_STOCK = "Board is not in stock";
     public static final String BOARD_ASSIGNED = "Board assigned";
 
+    public static final String IVALID_STATUS = "The card cannot return to the state stock";
+    public static final String CAN_NOT_CHANGE_TO_STOCK = "can not change to stock";
+    public static final String BOARD_LOW = "can not change because board is low";
+
     public ControlTxException() {
         super("Error - ControlTxException ");
     }

@@ -16,17 +16,14 @@ import co.com.ies.smol.service.dto.ContractDTO;
 import co.com.ies.smol.service.dto.ControlInterfaceBoardDTO;
 import co.com.ies.smol.service.dto.DataSheetInterfaceDTO;
 import co.com.ies.smol.service.dto.InterfaceBoardDTO;
-import co.com.ies.smol.service.dto.OperatorDTO;
 import co.com.ies.smol.service.dto.core.AssignBoardDTO;
 import co.com.ies.smol.service.dto.core.BoardRegisterDTO;
 import co.com.ies.smol.web.rest.core.ControlTxController;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 @Service
 public class ControlTxServiceImpl extends ControlTxDomainImpl implements ControlTxService {
@@ -61,6 +58,7 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
 
         for (String mac : macs) {
             InterfaceBoardDTO interfaceBoardDTO = createInterfaceBoard(mac, dataSheetInterfaceDTO);
+
             interfaceBoardDTO = interfaceBoardService.save(interfaceBoardDTO);
 
             ControlInterfaceBoardDTO controlInterfaceBoardDTO = createControlInterfaceBoard(
@@ -149,10 +147,8 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
     @Override
     public List<InterfaceBoardDTO> getInterfaceBoardByBrand(String brandName) {
         List<Operator> operators = operatorService.findAllOperatorsByBrandName(brandName);
-        log.info("---------- operators {}", operators);
         List<ContractDTO> contractList = contractService.findAllContractByOpeatorIn(operators);
         List<Long> contractIds = contractList.stream().map(ContractDTO::getId).toList();
-        log.info("---------- totalNumberOfBoardContracted {}", contractIds);
 
         List<ControlInterfaceBoardDTO> controlInterfaceBoardList = controlInterfaceBoardService.getControlInterfaceBoardByContractIds(
             contractIds
@@ -167,5 +163,52 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
         List<ContractDTO> contractList = contractService.findAllContractByOpeatorIn(operators);
 
         return contractList.stream().mapToLong(ContractDTO::getNumberInterfaceBoard).sum();
+    }
+
+    @Override
+    public void statusChangeBoard(String mac, StatusInterfaceBoard state) throws ControlTxException {
+        Optional<InterfaceBoardDTO> oInterfaceBoardDTO = interfaceBoardService.getInterfaceBoardByMac(mac);
+
+        InterfaceBoardDTO interfaceBoardDTO = validateExistingInterfaceBoard(oInterfaceBoardDTO);
+        InterfaceBoard interfaceBoard = interfaceBoardService.toEntity(interfaceBoardDTO);
+
+        Optional<ControlInterfaceBoardDTO> oControlInterfaceBoardDTO = controlInterfaceBoardService.getControlInterfaceBoardByInterfaceBoard(
+            interfaceBoard
+        );
+
+        ControlInterfaceBoardDTO controlInterfaceBoardDTO = validateChangeState(oControlInterfaceBoardDTO, interfaceBoardDTO, state);
+
+        ContractDTO contract = !state.equals(StatusInterfaceBoard.STOCK) ? controlInterfaceBoardDTO.getContract() : null;
+
+        controlInterfaceBoardDTO.setFinishTime(ZonedDateTime.now());
+        controlInterfaceBoardService.save(controlInterfaceBoardDTO);
+
+        Location location = getLocationFromState(state);
+
+        ControlInterfaceBoardDTO controlInterfaceBoardNewDTO = createControlInterfaceBoard(location, state, interfaceBoardDTO, contract);
+        controlInterfaceBoardService.save(controlInterfaceBoardNewDTO);
+    }
+
+    private Location getLocationFromState(StatusInterfaceBoard state) {
+        Location location = Location.IES;
+
+        switch (state) {
+            case OPERATION:
+                location = Location.CLIENT;
+                break;
+            case STOCK:
+                location = Location.IES;
+                break;
+            case IN_TRANSFER:
+                location = Location.CLIENT;
+                break;
+            case REPAIR:
+                location = Location.IES;
+                break;
+            case WARRANTY:
+                location = Location.IES;
+                break;
+        }
+        return location;
     }
 }

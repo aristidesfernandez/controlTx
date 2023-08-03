@@ -1,6 +1,7 @@
 package co.com.ies.smol.domain.core;
 
 import co.com.ies.smol.domain.core.error.ControlTxException;
+import co.com.ies.smol.domain.enumeration.StatusInterfaceBoard;
 import co.com.ies.smol.service.dto.ControlInterfaceBoardDTO;
 import co.com.ies.smol.service.dto.InterfaceBoardDTO;
 import java.util.Optional;
@@ -24,5 +25,25 @@ public abstract class ControlTxDomainImpl {
             throw new ControlTxException(ControlTxException.BOARD_NOT_FOUND);
         }
         return oInterfaceBoardDTO.get();
+    }
+
+    public ControlInterfaceBoardDTO validateChangeState(
+        Optional<ControlInterfaceBoardDTO> oControlInterfaceBoardDTO,
+        InterfaceBoardDTO interfaceBoard,
+        StatusInterfaceBoard state
+    ) throws ControlTxException {
+        if (oControlInterfaceBoardDTO.isEmpty()) {
+            throw new ControlTxException(ControlTxException.BOARD_NOT_FOUND);
+        }
+        ControlInterfaceBoardDTO controlBoardExists = oControlInterfaceBoardDTO.get();
+
+        StatusInterfaceBoard currentState = controlBoardExists.getState();
+        System.out.println(" estado actual " + currentState);
+
+        if (currentState.equals(StatusInterfaceBoard.LOW)) {
+            throw new ControlTxException(ControlTxException.BOARD_LOW);
+        }
+
+        return controlBoardExists;
     }
 }

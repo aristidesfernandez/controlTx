@@ -1,6 +1,7 @@
 package co.com.ies.smol.service.core;
 
 import co.com.ies.smol.domain.core.error.ControlTxException;
+import co.com.ies.smol.domain.enumeration.StatusInterfaceBoard;
 import co.com.ies.smol.service.dto.InterfaceBoardDTO;
 import co.com.ies.smol.service.dto.core.AssignBoardDTO;
 import co.com.ies.smol.service.dto.core.BoardRegisterDTO;
@@ -14,4 +15,6 @@ public interface ControlTxService {
     List<InterfaceBoardDTO> getInterfaceBoardByBrand(String brandName);
 
     Long getCountInterfaceBoardByBrand(String brandName);
+
+    void statusChangeBoard(String mac, StatusInterfaceBoard state) throws ControlTxException;
 }
