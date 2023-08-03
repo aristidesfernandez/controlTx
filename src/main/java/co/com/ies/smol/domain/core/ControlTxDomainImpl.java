@@ -38,10 +38,17 @@ public abstract class ControlTxDomainImpl {
         ControlInterfaceBoardDTO controlBoardExists = oControlInterfaceBoardDTO.get();
 
         StatusInterfaceBoard currentState = controlBoardExists.getState();
-        System.out.println(" estado actual " + currentState);
+        System.out.println("-------------------- estado actual " + currentState);
 
         if (currentState.equals(StatusInterfaceBoard.LOW)) {
             throw new ControlTxException(ControlTxException.BOARD_LOW);
+        }
+        if (currentState.equals(state)) {
+            throw new ControlTxException(ControlTxException.SAME_STATE);
+        }
+
+        if (currentState.equals(StatusInterfaceBoard.STOCK)) {
+            throw new ControlTxException(ControlTxException.CAN_NOT_CHANGE_OF_STATE);
         }
 
         return controlBoardExists;

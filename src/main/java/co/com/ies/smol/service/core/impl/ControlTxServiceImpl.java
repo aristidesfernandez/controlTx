@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ControlTxServiceImpl extends ControlTxDomainImpl implements ControlTxService {
@@ -168,7 +169,7 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
     @Override
     public void statusChangeBoard(String mac, StatusInterfaceBoard state) throws ControlTxException {
         Optional<InterfaceBoardDTO> oInterfaceBoardDTO = interfaceBoardService.getInterfaceBoardByMac(mac);
-
+        System.out.println("------------ ");
         InterfaceBoardDTO interfaceBoardDTO = validateExistingInterfaceBoard(oInterfaceBoardDTO);
         InterfaceBoard interfaceBoard = interfaceBoardService.toEntity(interfaceBoardDTO);
 
