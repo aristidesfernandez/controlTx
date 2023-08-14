@@ -2,8 +2,10 @@ package co.com.ies.smol.domain.core;
 
 import co.com.ies.smol.domain.core.error.ControlTxException;
 import co.com.ies.smol.domain.enumeration.StatusInterfaceBoard;
+import co.com.ies.smol.service.dto.ContractDTO;
 import co.com.ies.smol.service.dto.ControlInterfaceBoardDTO;
 import co.com.ies.smol.service.dto.InterfaceBoardDTO;
+import java.util.List;
 import java.util.Optional;
 
 public abstract class ControlTxDomainImpl {
@@ -52,5 +54,11 @@ public abstract class ControlTxDomainImpl {
         }
 
         return controlBoardExists;
+    }
+
+    public void validateExistingContract(List<ContractDTO> contractList) throws ControlTxException {
+        if (contractList.isEmpty()) {
+            throw new ControlTxException(ControlTxException.CONTRACT_NOT_FOUND);
+        }
     }
 }

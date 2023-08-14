@@ -20,12 +20,16 @@ import co.com.ies.smol.service.dto.core.AssignBoardDTO;
 import co.com.ies.smol.service.dto.core.BoardRegisterDTO;
 import co.com.ies.smol.web.rest.core.ControlTxController;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+@Transactional
 @Service
 public class ControlTxServiceImpl extends ControlTxDomainImpl implements ControlTxService {
 
@@ -115,34 +119,38 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
         return controlInterfaceBoardDTO;
     }
 
+    @Transactional
     @Override
     public void assignInterfaceBoard(AssignBoardDTO assignBoardDTO) throws ControlTxException {
-        String mac = assignBoardDTO.getMac();
+        List<String> macs = assignBoardDTO.getMacs();
         String reference = assignBoardDTO.getReference();
 
-        Optional<InterfaceBoardDTO> oInterfaceBoardDTO = interfaceBoardService.getInterfaceBoardByMac(mac);
+        for (String mac : macs) {
+            Optional<InterfaceBoardDTO> oInterfaceBoardDTO = interfaceBoardService.getInterfaceBoardByMac(mac);
 
-        InterfaceBoardDTO interfaceBoardDTO = validateExistingInterfaceBoard(oInterfaceBoardDTO);
-        InterfaceBoard interfaceBoard = interfaceBoardService.toEntity(interfaceBoardDTO);
+            InterfaceBoardDTO interfaceBoardDTO = validateExistingInterfaceBoard(oInterfaceBoardDTO);
+            InterfaceBoard interfaceBoard = interfaceBoardService.toEntity(interfaceBoardDTO);
 
-        Optional<ControlInterfaceBoardDTO> oControlInterfaceBoardDTO = controlInterfaceBoardService.getControlInterfaceBoardByInterfaceBoard(
-            interfaceBoard
-        );
+            Optional<ControlInterfaceBoardDTO> oControlInterfaceBoardDTO = controlInterfaceBoardService.getControlInterfaceBoardByInterfaceBoard(
+                interfaceBoard
+            );
 
-        ControlInterfaceBoardDTO controlInterfaceBoardDTO = validateExistingBoardControl(oControlInterfaceBoardDTO);
+            ControlInterfaceBoardDTO controlInterfaceBoardDTO = validateExistingBoardControl(oControlInterfaceBoardDTO);
 
-        ContractDTO contract = contractService.getContractByReference(reference);
+            Optional<ContractDTO> oContract = Optional.empty(); //contractService.getContractByReference(reference);
+            ContractDTO contract = new ContractDTO(); // validateExistingContract(oContract);
 
-        controlInterfaceBoardDTO.setFinishTime(ZonedDateTime.now());
-        controlInterfaceBoardService.save(controlInterfaceBoardDTO);
+            controlInterfaceBoardDTO.setFinishTime(ZonedDateTime.now());
+            controlInterfaceBoardService.save(controlInterfaceBoardDTO);
 
-        ControlInterfaceBoardDTO controlInterfaceBoardNewDTO = createControlInterfaceBoard(
-            Location.CLIENT,
-            StatusInterfaceBoard.OPERATION,
-            interfaceBoardDTO,
-            contract
-        );
-        controlInterfaceBoardService.save(controlInterfaceBoardNewDTO);
+            ControlInterfaceBoardDTO controlInterfaceBoardNewDTO = createControlInterfaceBoard(
+                Location.CLIENT,
+                StatusInterfaceBoard.OPERATION,
+                interfaceBoardDTO,
+                contract
+            );
+            controlInterfaceBoardService.save(controlInterfaceBoardNewDTO);
+        }
     }
 
     @Override
@@ -211,5 +219,21 @@ public class ControlTxServiceImpl extends ControlTxDomainImpl implements Control
                 break;
         }
         return location;
+    }
+
+    public List<InterfaceBoardDTO> getInterfaceBoardAssignedByContract(String reference) throws ControlTxException {
+        List<ControlInterfaceBoardDTO> controlInterfaceBoardList = controlInterfaceBoardService.getControlInterfaceBoardByReference(
+            reference
+        );
+
+        return controlInterfaceBoardList.stream().map(ControlInterfaceBoardDTO::getInterfaceBoard).toList();
+    }
+
+    @Override
+    public Long getCountInterfaceBoardByContracted(String reference) throws ControlTxException {
+        List<ContractDTO> contractList = contractService.getContractByReference(reference);
+        validateExistingContract(contractList);
+
+        return contractList.stream().mapToLong(ContractDTO::getNumberInterfaceBoard).sum();
     }
 }

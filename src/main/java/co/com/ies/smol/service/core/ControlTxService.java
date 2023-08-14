@@ -17,4 +17,7 @@ public interface ControlTxService {
     Long getCountInterfaceBoardByBrand(String brandName);
 
     void statusChangeBoard(String mac, StatusInterfaceBoard state) throws ControlTxException;
+    List<InterfaceBoardDTO> getInterfaceBoardAssignedByContract(String reference) throws ControlTxException;
+
+    Long getCountInterfaceBoardByContracted(String reference) throws ControlTxException;
 }
